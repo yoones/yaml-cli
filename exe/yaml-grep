@@ -1,0 +1,54 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "optparse"
+require_relative "../lib/yaml_cli"
+
+options = {
+  invert_match: false,
+  exhaustive: false# ,
+  # values: false
+}
+
+optparse = OptionParser.new do |opts|
+  opts.banner = "Usage: #{$PROGRAM_NAME} [OPTIONS] <filepath> <word> [<word> ...]"
+
+  opts.on("-v", "--invert-match", "Invert the sense of matching") do |_v|
+    options[:invert_match] = true
+  end
+
+  opts.on("--exhaustive", "List all subkeys of a matching key") do |_v|
+    options[:exhaustive] = true
+  end
+
+  # opts.on("--values", "List all subkeys of a matching key") do |_v|
+  #   options[:values] = true
+  # end
+
+  opts
+end
+
+optparse.parse!
+
+filepath = ARGV.shift
+words = ARGV
+
+abort(optparse.help) if filepath.nil? || words.count.zero?
+
+yaml_cli = YamlCli.new
+yaml_cli.load_file(filepath)
+matches = yaml_cli.grep(
+  words,
+  invert_match: options[:invert_match],
+  exhaustive: options[:exhaustive]
+)
+matches.each do |match|
+  puts match
+end
+
+# TODO: make grep work/loop on arrays of hashes as well
+
+# spec:
+#   containers:
+#   - arg:
+#     key: value

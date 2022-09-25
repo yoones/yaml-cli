@@ -1,0 +1,10 @@
+en:
+  user:
+    title: Basic user
+  admin:
+    title: Administrator
+fr:
+  user:
+    title: Utilisateur basique
+  admin:
+    title: Administrateur

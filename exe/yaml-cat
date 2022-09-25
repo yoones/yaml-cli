@@ -1,0 +1,55 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "optparse"
+require_relative "../lib/yaml_cli"
+
+options = {
+  preserve_path: true
+}
+
+optparse = OptionParser.new do |opts|
+  opts.banner = "Usage: #{$PROGRAM_NAME} [OPTIONS] <filepath> <fullkey> [<fullkey> ...]"
+
+  opts.on("--[no-]path", "Whether the path to fullkey should be included in the output YAML") do |v|
+    options[:preserve_path] = v
+  end
+
+  opts
+end
+
+optparse.parse!
+
+filepath = ARGV.shift
+abort(optparse.help) if filepath.nil?
+
+fullkeys = ARGV
+fullkeys = [""] if fullkeys.empty?
+
+yaml_cli = YamlCli.new
+
+invalid_keys = false
+fullkeys.each do |key|
+  next if yaml_cli.key_valid?(key, allow_blank: true)
+
+  $stderr.puts "Invalid key: #{key}"
+  invalid_keys = true
+end
+exit 1 if invalid_keys
+
+yaml_cli.load_file(filepath)
+
+missing_keys = false
+fullkeys.each do |key|
+  next if yaml_cli.exists?(key)
+
+  $stderr.puts "Missing key: #{key}"
+  missing_keys = true
+end
+exit 1 if missing_keys
+
+fullkeys.each do |fullkey|
+  next unless yaml_cli.exists?(fullkey)
+
+  puts yaml_cli.cat(fullkey, preserve_path: options[:preserve_path])
+end
